@@ -4,24 +4,9 @@ use std::time::{Duration, UNIX_EPOCH};
 use libc::ENOENT;
 use fuse::{FileType, FileAttr, Filesystem, Request, ReplyData, ReplyEntry, ReplyAttr, ReplyDirectory};
 
-const TTL: Duration = Duration::from_secs(1);           // 1 second
+mod hello_attr;
 
-const HELLO_DIR_ATTR: FileAttr = FileAttr {
-    ino: 1,
-    size: 0,
-    blocks: 0,
-    atime: UNIX_EPOCH,                                  // 1970-01-01 00:00:00
-    mtime: UNIX_EPOCH,
-    ctime: UNIX_EPOCH,
-    crtime: UNIX_EPOCH,
-    kind: FileType::Directory,
-    perm: 0o755,
-    nlink: 2,
-    uid: 501,
-    gid: 20,
-    rdev: 0,
-    flags: 0,
-};
+const TTL: Duration = Duration::from_secs(1);           // 1 second
 
 const HELLO_TXT_CONTENT: &str = "Hello World!\n";
 
@@ -29,9 +14,9 @@ const HELLO_TXT_ATTR: FileAttr = FileAttr {
     ino: 2,
     size: 13,
     blocks: 1,
-    atime: UNIX_EPOCH,                                  // 1970-01-01 00:00:00
-    mtime: UNIX_EPOCH,
-    ctime: UNIX_EPOCH,
+    atime:  UNIX_EPOCH,                // 1970-01-01 00:00:00
+    mtime:  UNIX_EPOCH,
+    ctime:  UNIX_EPOCH,
     crtime: UNIX_EPOCH,
     kind: FileType::RegularFile,
     perm: 0o644,
@@ -42,7 +27,9 @@ const HELLO_TXT_ATTR: FileAttr = FileAttr {
     flags: 0,
 };
 
-struct HelloFS;
+struct HelloFS {
+    pub attr: FileAttr,
+}
 
 impl Filesystem for HelloFS {
     fn lookup(&mut self, _req: &Request, parent: u64, name: &OsStr, reply: ReplyEntry) {
@@ -54,8 +41,9 @@ impl Filesystem for HelloFS {
     }
 
     fn getattr(&mut self, _req: &Request, ino: u64, reply: ReplyAttr) {
+        //println!("-- getattr for {} --", ino);
         match ino {
-            1 => reply.attr(&TTL, &HELLO_DIR_ATTR),
+            1 => reply.attr(&TTL, &(self.attr)),
             2 => reply.attr(&TTL, &HELLO_TXT_ATTR),
             _ => reply.error(ENOENT),
         }
@@ -96,5 +84,7 @@ fn main() {
         .iter()
         .map(|o| o.as_ref())
         .collect::<Vec<&OsStr>>();
-    fuse::mount(HelloFS, mountpoint, &options).unwrap();
+    let hello_fs = HelloFS { attr : hello_attr::dir_attr_get() };
+    fuse::mount(hello_fs, mountpoint, &options).unwrap();
+    //fuse::spawn_mount(HelloFS, mountpoint, &options).unwrap();
 }
