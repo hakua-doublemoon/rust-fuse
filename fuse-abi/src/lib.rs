@@ -385,7 +385,8 @@ pub enum fuse_notify_code {
     FUSE_NOTIFY_DELETE = 6,
 }
 
-#[cfg(feature = "abi-7-11")]
+//#[cfg(feature = "abi-7-11")]
+#[cfg(all(feature = "abi-7-11", feature = "nightly"))]
 impl TryFrom<u32> for fuse_notify_code {
     type Error = InvalidNotifyCodeError;
 

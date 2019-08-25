@@ -12,6 +12,10 @@ keywords = ["fuse", "filesystem", "system", "bindings"]
 categories = ["api-bindings", "filesystem"]
 license = "MIT"
 
+[features]
+abi-7-11 = []
+abi-7-19 = ["abi-7-11"]
+
 [workspace]
 members = [".", "fuse-abi", "fuse-sys"]
 

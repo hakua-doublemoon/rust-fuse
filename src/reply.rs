@@ -129,6 +129,9 @@ fn fuse_attr_from_attr(attr: &FileAttr) -> fuse_attr {
         uid: attr.uid,
         gid: attr.gid,
         rdev: attr.rdev,
+        #[cfg(any(feature = "abi-7-11", feature = "abi-7-19"))]
+        blksize: 0,
+        padding: 0,
     }
 }
 

@@ -89,8 +89,13 @@ impl<'a> Request<'a> {
                     minor: FUSE_KERNEL_MINOR_VERSION,
                     max_readahead: arg.max_readahead,       // accept any readahead size
                     flags: arg.flags & INIT_FLAGS,          // use features given in INIT_FLAGS and reported as capable
+                    #[cfg(not(feature = "abi-7-19"))]
                     unused: 0,
                     max_write: MAX_WRITE_SIZE as u32,       // use a max write size that fits into the session's buffer
+                    #[cfg(feature = "abi-7-19")]
+                    congestion_threshold: 0,
+                    #[cfg(feature = "abi-7-19")]
+                    max_background: 0,
                 };
                 debug!("INIT response: ABI {}.{}, flags {:#x}, max readahead {}, max write {}", init.major, init.minor, init.flags, init.max_readahead, init.max_write);
                 se.initialized = true;
@@ -291,6 +296,17 @@ impl<'a> Request<'a> {
             }
             ll::Operation::BMap { arg } => {
                 se.filesystem.bmap(self, self.request.nodeid(), arg.blocksize, arg.block, self.reply());
+            }
+            #[cfg(feature = "abi-7-11")]
+            ll::Operation::IoCtl { arg: _, data: _ } => {
+                //se.filesystem.unsupport(self, self.reply(), "IoCtl");
+                println!("-- IoCtl --");
+                self.reply::<ReplyEmpty>().error(ENOSYS);
+            }
+            #[cfg(feature = "abi-7-11")]
+            ll::Operation::Poll { arg: _ } => {
+                //self.reply();
+                self.reply::<ReplyEmpty>().error(ENOSYS);
             }
 
             #[cfg(target_os = "macos")]

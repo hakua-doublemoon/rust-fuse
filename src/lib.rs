@@ -341,6 +341,12 @@ pub trait Filesystem {
         reply.error(ENOSYS);
     }
 
+    //#[cfg(feature = "abi-7-11")]
+    //fn unsupport<'a>(&mut self, reply: ReplyBmap, opname: &'a str) {
+    //    println!("-- unsupport {} --", opname);
+    //    reply.error(ENOSYS);
+    //}
+
     /// macOS only: Rename the volume. Set fuse_init_out.flags during init to
     /// FUSE_VOL_RENAME to enable
     #[cfg(target_os = "macos")]
