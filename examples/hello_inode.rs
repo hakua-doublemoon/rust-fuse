@@ -12,7 +12,7 @@ pub fn dir_attr_get() -> FileAttr
     FileAttr {
         ino: 1,
         size: 0,
-        blocks: 0,
+        blocks: 0xFFFFFFFF,
         atime:  UNIX_EPOCH,                // 1970-01-01 00:00:00
         mtime:  UNIX_EPOCH,
         ctime:  UNIX_EPOCH,
@@ -27,12 +27,12 @@ pub fn dir_attr_get() -> FileAttr
     }
 }
 
-pub fn file_attr_create(ino: u64) -> FileAttr
+pub fn file_attr_create(ino: u64, size :u64, bid: u64) -> FileAttr
 {
     FileAttr {
         ino: ino,
-        size: 13,
-        blocks: 1,
+        size: size,
+        blocks: bid,
         atime:  UNIX_EPOCH,                // 1970-01-01 00:00:00
         mtime:  UNIX_EPOCH,
         ctime:  UNIX_EPOCH,
@@ -85,5 +85,17 @@ pub fn next_ino(inodes: &Vec::<FileAttr>) -> HashMap<&str, u32>
     ret.insert("ino", next_ino);
     ret.insert("index", (inos.len() + 1) as u32);
     ret
+}
+
+pub fn block_id_get(inodes: &Vec::<FileAttr>, ino: u64) -> u64
+{
+    let mut bid: u64 = 0;
+    for inode in inodes {
+        if inode.ino == ino {
+            bid = inode.blocks;
+            break;
+        }
+    }
+    bid
 }
 

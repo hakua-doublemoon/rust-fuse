@@ -2,8 +2,7 @@
 use fuse::{FileType};
 
 pub struct DirectoryInfo {
-    pub ino:  u64,
-    //pub name: &'static str,
+    pub ino:  u64, // これをなくすなら代わりにDirectoryInfoの番号をInode側に持たせる必要がある
     pub name: String,
 }
 

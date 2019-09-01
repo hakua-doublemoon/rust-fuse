@@ -167,6 +167,7 @@ impl<T> ReplyRaw<T> {
             error: -err,
             unique: self.unique,
         };
+        //println!("[trace] send {}", header.len);
         as_bytes(&header, |headerbytes| {
             let sender = self.sender.take().unwrap();
             let mut sendbytes = headerbytes.to_vec();
@@ -240,6 +241,7 @@ impl Reply for ReplyData {
 impl ReplyData {
     /// Reply to a request with the given data
     pub fn data(mut self, data: &[u8]) {
+        //println!("  data len = {}", data.len());
         self.reply.send(0, &[data]);
     }
 
@@ -693,6 +695,7 @@ mod test {
 
     impl super::ReplySender for AssertSender {
         fn send(&self, data: &[&[u8]]) {
+            //println!("[trace] send 2");
             assert_eq!(self.expected, data);
         }
     }
@@ -955,6 +958,7 @@ mod test {
 
     impl super::ReplySender for Sender<()> {
         fn send(&self, _: &[&[u8]]) {
+            //println!("[trace] send 3");
             Sender::send(self, ()).unwrap()
         }
     }

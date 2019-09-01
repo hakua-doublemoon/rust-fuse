@@ -41,6 +41,26 @@ ls_test("01", expect_fnames, test_results)
 expect_fnames = ["hello.txt", new_fname]
 ls_test("03", expect_fnames, test_results)
 
+# 04: read
+  trg_fname = "hello.txt"
+  expect_str = "hello hello world\n"
+  begin
+    File.open(TEST_DIR+"/"+trg_fname, File::RDONLY) do |fp|
+        str = "hello world!!"
+        fp.read(nil, str)
+        str.delete!("\0")
+        puts str
+        p str.unpack("c*")
+        p expect_str.unpack("c*")
+        fp.close
+        if  str != expect_str  then
+            raise "unexpected string: #{str}"
+        end
+    end
+    test_results[4] = "04: OK"
+  rescue =>e
+    test_results[4] = "04: NG => #{e.message}"
+  end
 
 # Results
 puts test_results
