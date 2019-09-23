@@ -300,7 +300,7 @@ impl<'a> Request<'a> {
             #[cfg(feature = "abi-7-11")]
             ll::Operation::IoCtl { arg: _, data: _ } => {
                 //se.filesystem.unsupport(self, self.reply(), "IoCtl");
-                println!("-- IoCtl --");
+                println!("[I] -- IoCtl --");
                 self.reply::<ReplyEmpty>().error(ENOSYS);
             }
             #[cfg(feature = "abi-7-11")]

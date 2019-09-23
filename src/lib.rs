@@ -114,11 +114,13 @@ pub trait Filesystem {
 
     /// Get file attributes.
     fn getattr(&mut self, _req: &Request<'_>, _ino: u64, reply: ReplyAttr) {
+        println!("[I] -- getattr ---");
         reply.error(ENOSYS);
     }
 
     /// Set file attributes.
     fn setattr(&mut self, _req: &Request<'_>, _ino: u64, _mode: Option<u32>, _uid: Option<u32>, _gid: Option<u32>, _size: Option<u64>, _atime: Option<SystemTime>, _mtime: Option<SystemTime>, _fh: Option<u64>, _crtime: Option<SystemTime>, _chgtime: Option<SystemTime>, _bkuptime: Option<SystemTime>, _flags: Option<u32>, reply: ReplyAttr) {
+        println!("[I] -- setattr ---");
         reply.error(ENOSYS);
     }
 
@@ -155,11 +157,13 @@ pub trait Filesystem {
 
     /// Rename a file.
     fn rename(&mut self, _req: &Request<'_>, _parent: u64, _name: &OsStr, _newparent: u64, _newname: &OsStr, reply: ReplyEmpty) {
+        println!("[I]--rename--");
         reply.error(ENOSYS);
     }
 
     /// Create a hard link.
     fn link(&mut self, _req: &Request<'_>, _ino: u64, _newparent: u64, _newname: &OsStr, reply: ReplyEntry) {
+        println!("[I]--link--");
         reply.error(ENOSYS);
     }
 
@@ -172,6 +176,7 @@ pub trait Filesystem {
     /// filesystem may set, to change the way the file is opened. See fuse_file_info
     /// structure in <fuse_common.h> for more details.
     fn open(&mut self, _req: &Request<'_>, _ino: u64, _flags: u32, reply: ReplyOpen) {
+        //println!("[I]--open--");
         reply.opened(0, 0);
     }
 
@@ -226,6 +231,7 @@ pub trait Filesystem {
     /// If the datasync parameter is non-zero, then only the user data should be flushed,
     /// not the meta data.
     fn fsync(&mut self, _req: &Request<'_>, _ino: u64, _fh: u64, _datasync: bool, reply: ReplyEmpty) {
+        println!("[I] -- fsync ---");
         reply.error(ENOSYS);
     }
 
@@ -262,6 +268,7 @@ pub trait Filesystem {
     /// be flushed, not the meta data. fh will contain the value set by the opendir
     /// method, or will be undefined if the opendir method didn't set any value.
     fn fsyncdir (&mut self, _req: &Request<'_>, _ino: u64, _fh: u64, _datasync: bool, reply: ReplyEmpty) {
+        println!("[I] -- fsyncdir ---");
         reply.error(ENOSYS);
     }
 
@@ -272,6 +279,7 @@ pub trait Filesystem {
 
     /// Set an extended attribute.
     fn setxattr(&mut self, _req: &Request<'_>, _ino: u64, _name: &OsStr, _value: &[u8], _flags: u32, _position: u32, reply: ReplyEmpty) {
+        println!("[I] -- setxattr ---");
         reply.error(ENOSYS);
     }
 
@@ -280,6 +288,7 @@ pub trait Filesystem {
     /// If `size` is not 0, and the value fits, send it with `reply.data()`, or
     /// `reply.error(ERANGE)` if it doesn't.
     fn getxattr(&mut self, _req: &Request<'_>, _ino: u64, _name: &OsStr, _size: u32, reply: ReplyXattr) {
+        println!("[I] -- getxattr ---");
         reply.error(ENOSYS);
     }
 
@@ -288,11 +297,13 @@ pub trait Filesystem {
     /// If `size` is not 0, and the value fits, send it with `reply.data()`, or
     /// `reply.error(ERANGE)` if it doesn't.
     fn listxattr(&mut self, _req: &Request<'_>, _ino: u64, _size: u32, reply: ReplyXattr) {
+        println!("[I] -- listxattr ---");
         reply.error(ENOSYS);
     }
 
     /// Remove an extended attribute.
     fn removexattr(&mut self, _req: &Request<'_>, _ino: u64, _name: &OsStr, reply: ReplyEmpty) {
+        println!("[I] -- removexattr ---");
         reply.error(ENOSYS);
     }
 
@@ -301,6 +312,7 @@ pub trait Filesystem {
     /// mount option is given, this method is not called. This method is not called
     /// under Linux kernel versions 2.4.x
     fn access(&mut self, _req: &Request<'_>, _ino: u64, _mask: u32, reply: ReplyEmpty) {
+        println!("[I] -- access ---");
         reply.error(ENOSYS);
     }
 
@@ -315,11 +327,13 @@ pub trait Filesystem {
     /// implemented or under Linux kernel versions earlier than 2.6.15, the mknod()
     /// and open() methods will be called instead.
     fn create(&mut self, _req: &Request<'_>, _parent: u64, _name: &OsStr, _mode: u32, _flags: u32, reply: ReplyCreate) {
+        println!("[I] -- create ---");
         reply.error(ENOSYS);
     }
 
     /// Test for a POSIX file lock.
     fn getlk(&mut self, _req: &Request<'_>, _ino: u64, _fh: u64, _lock_owner: u64, _start: u64, _end: u64, _typ: u32, _pid: u32, reply: ReplyLock) {
+        println!("[I] -- getlk ---");
         reply.error(ENOSYS);
     }
 
@@ -331,6 +345,7 @@ pub trait Filesystem {
     /// implemented, the kernel will still allow file locking to work locally.
     /// Hence these are only interesting for network filesystems and similar.
     fn setlk(&mut self, _req: &Request<'_>, _ino: u64, _fh: u64, _lock_owner: u64, _start: u64, _end: u64, _typ: u32, _pid: u32, _sleep: bool, reply: ReplyEmpty) {
+        println!("[I] -- setlk ---");
         reply.error(ENOSYS);
     }
 
@@ -338,6 +353,7 @@ pub trait Filesystem {
     /// Note: This makes sense only for block device backed filesystems mounted
     /// with the 'blkdev' option
     fn bmap(&mut self, _req: &Request<'_>, _ino: u64, _blocksize: u32, _idx: u64, reply: ReplyBmap) {
+        println!("[I] -- bmap ---");
         reply.error(ENOSYS);
     }
 

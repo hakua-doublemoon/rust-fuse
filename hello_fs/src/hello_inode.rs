@@ -6,6 +6,7 @@ use nix::unistd;
 use std::collections::HashMap;
 
 pub const INVALID_INO: usize = 0xFFFFFFFF;
+pub const INVALID_BLOCK_ID: usize = 0xFFFFFFFF;
 
 pub fn dir_attr_get() -> FileAttr
 {
@@ -27,12 +28,12 @@ pub fn dir_attr_get() -> FileAttr
     }
 }
 
-pub fn file_attr_create(ino: u64, size :u64, bid: u64) -> FileAttr
+pub fn inode_data_create(ino: u64, size :u64, info_idx: usize) -> FileAttr
 {
     FileAttr {
         ino: ino,
         size: size,
-        blocks: bid,
+        blocks: info_idx as u64,
         atime:  UNIX_EPOCH,                // 1970-01-01 00:00:00
         mtime:  UNIX_EPOCH,
         ctime:  UNIX_EPOCH,
@@ -87,15 +88,15 @@ pub fn next_ino(inodes: &Vec::<FileAttr>) -> HashMap<&str, u32>
     ret
 }
 
-pub fn block_id_get(inodes: &Vec::<FileAttr>, ino: u64) -> u64
+pub fn info_idx_get(inodes: &Vec::<FileAttr>, ino: u64) -> usize
 {
-    let mut bid: u64 = 0;
+    let mut iid: usize = INVALID_BLOCK_ID;
     for inode in inodes {
         if inode.ino == ino {
-            bid = inode.blocks;
+            iid = inode.blocks as usize;
             break;
         }
     }
-    bid
+    iid 
 }
 
