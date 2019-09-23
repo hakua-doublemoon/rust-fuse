@@ -9,8 +9,8 @@ use fuse::{ReplyWrite, ReplyOpen, ReplyEmpty, ReplyXattr};
 
 mod hello_inode;
 use hello_inode::{INVALID_INO, INVALID_BLOCK_ID};
-mod hello_dir_info;
-use hello_dir_info::{BlockInfo};
+mod hello_block_info;
+use hello_block_info::{BlockInfo};
 mod hello_blocks;
 
 const TTL: Duration = Duration::from_secs(1);           // 1 second
@@ -38,7 +38,7 @@ impl Filesystem for HelloFS {
         println!("[D] -- lookup --");
         //println!("[D] < {}", name.to_str().unwrap());
         let fname = String::from(name.to_str().unwrap());
-        let ino = hello_dir_info::lookup(&self.block_infos, fname);
+        let ino = hello_block_info::lookup(&self.block_infos, fname);
         let node_idx = hello_inode::exists_ino(&self.file_inode, ino);
         if node_idx != INVALID_INO {
             reply.entry(&TTL, &(self.file_inode[node_idx]), 0);
@@ -97,7 +97,7 @@ impl Filesystem for HelloFS {
             (1, FileType::Directory, ".."),
             //(2, FileType::RegularFile, "hello.txt"),
         ];
-        hello_dir_info::readdir(&mut entries, &(self.block_infos));
+        hello_block_info::readdir(&mut entries, &(self.block_infos));
         //println!("{:?}", entries2);
 
         for (i, entry) in entries.into_iter().enumerate().skip(offset as usize) {
@@ -178,7 +178,7 @@ impl HelloFS {
         println!("new ino = {}", ino);
 
         let fname: String = String::from(name);
-        self.block_infos.push(hello_dir_info::create(fname, ino));
+        self.block_infos.push(hello_block_info::create(fname, ino));
         let info_idx = self.block_infos.len() - 1;
         self.file_inode.push(hello_inode::inode_data_create(ino, 1, info_idx));
 
