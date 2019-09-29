@@ -36,10 +36,7 @@ struct HelloFS {
 impl Filesystem for HelloFS {
     fn lookup(&mut self, _req: &Request, _parent: u64, name: &OsStr, reply: ReplyEntry) {
         println!("[D] -- lookup --");
-        //println!("[D] < {}", name.to_str().unwrap());
-        let fname = String::from(name.to_str().unwrap());
-        let ino = hello_block_info::lookup(&self.block_infos, fname);
-        let node_idx = hello_inode::exists_ino(&self.file_inode, ino);
+        let node_idx = self.nid_get_from_name(name);
         if node_idx != INVALID_INO {
             reply.entry(&TTL, &(self.file_inode[node_idx]), 0);
         } else {
@@ -117,13 +114,15 @@ impl Filesystem for HelloFS {
         }
     }
 
+    // なくても良い
     fn flush(&mut self, _req: &Request<'_>, ino: u64, fh: u64, _lock_owner: u64, reply: ReplyEmpty) {
         println!("[D] -- flush [ino: {}] ---", ino);
         debug_assert!(fh == FILE_HANDLER, "unknown fh {} / ino = {}", fh, ino);
-        self.is_file_open = false;
+        //self.is_file_open = false;
         reply.ok();
     }
 
+    // なくても良い（でもファイルハンドラーの制御をするなら必要）
     fn release(&mut self, _req: &Request<'_>, ino: u64, fh: u64, _flags: u32, _lock_owner: u64, _flush: bool, reply: ReplyEmpty) {
         println!("[D] -- release [ino: {}] --", ino);
         debug_assert!(fh == FILE_HANDLER, "unknown fh {} / ino = {}", fh, ino);
@@ -147,6 +146,7 @@ impl Filesystem for HelloFS {
         }
     }
 
+    // なくても良い
     fn getxattr(&mut self, _req: &Request<'_>, _ino: u64, _name: &OsStr, _size: u32, reply: ReplyXattr)
     {
         println!("[D] -- getxattr (not support) ---");
@@ -163,9 +163,39 @@ impl Filesystem for HelloFS {
         let node_idx = hello_inode::exists_ino(&self.file_inode, ino);
         reply.attr(&TTL, &(self.file_inode[node_idx]));
     }
+
+    fn unlink(&mut self, _req: &Request<'_>, _parent: u64, name: &OsStr, reply: ReplyEmpty) {
+        println!("[D] -- unlink ---");
+        let node_idx = self.nid_get_from_name(name);
+        let info_idx = (self.file_inode[node_idx].blocks) as usize;
+
+        let block_num = self.block_infos.len();
+        let is_end_block = {info_idx == block_num-1};
+        let rm_size = self.block_infos[info_idx].size();
+
+        self.file_inode.remove(node_idx);
+        self.block_infos.swap_remove(info_idx);
+        // update block ID
+        if  block_num > 1  && !is_end_block  {
+            let ino = self.block_infos[info_idx].ino;
+            let node_idx = hello_inode::exists_ino(&self.file_inode, ino);
+            self.file_inode[node_idx].blocks = info_idx as u64;
+            self.file_inode[node_idx].size   = self.block_infos[info_idx].size() as u64;
+        }
+        self.fs_size_update(-(rm_size as i32));
+        reply.ok();
+    }
 }
 
 impl HelloFS {
+
+    fn nid_get_from_name(&self, name: &OsStr) -> usize
+    {
+        //println!("[D] < {}", name.to_str().unwrap());
+        let fname = String::from(name.to_str().unwrap());
+        let ino = hello_block_info::lookup(&self.block_infos, fname);
+        hello_inode::exists_ino(&self.file_inode, ino)
+    }
 
     fn mknod_impl(&mut self, parent: u64, name: &str, _mode: u32, _rdev: u32) 
     -> (u64, usize)
@@ -182,12 +212,12 @@ impl HelloFS {
         let info_idx = self.block_infos.len() - 1;
         self.file_inode.push(hello_inode::inode_data_create(ino, 1, info_idx));
 
-        self.update_fs_size(self.block_infos[info_idx].bbox.size() as i32);
+        self.fs_size_update(self.block_infos[info_idx].size() as i32);
 
         (ino, info_idx) 
     }
 
-    fn update_fs_size(&mut self, size: i32)
+    fn fs_size_update(&mut self, size: i32)
     {
         self.fs_size += size;
     }
@@ -197,7 +227,7 @@ impl HelloFS {
         let ret = self.block_infos[info_idx].bbox.write(self.fs_size, data, offset);
 
         debug_assert!(true == ret.0, "write failed");
-        self.update_fs_size(ret.1);
+        self.fs_size_update(ret.1);
         self.file_inode[node_idx].size = ret.2 as u64;
         ret.2
     }
@@ -227,7 +257,7 @@ fn main() {
         fs_size:      0,
         is_file_open: false,
     };
-    hello_fs.update_fs_size(hello_fs.block_infos[first_info_idx].bbox.size() as i32);
+    hello_fs.fs_size_update(hello_fs.block_infos[first_info_idx].size() as i32);
     let written_size = hello_fs.write_impl(first_info_idx, first_node_idx, 0, &HELLO_DATA);
     hello_fs.file_inode[first_node_idx].size = written_size as u64;
 

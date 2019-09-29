@@ -96,7 +96,9 @@ pub trait Filesystem {
 
     /// Clean up filesystem.
     /// Called on filesystem exit.
-    fn destroy(&mut self, _req: &Request<'_>) {}
+    fn destroy(&mut self, _req: &Request<'_>) {
+        println!("[I] -- destroy ---");
+    }
 
     /// Look up a directory entry by name and get its attributes.
     fn lookup(&mut self, _req: &Request<'_>, _parent: u64, _name: &OsStr, reply: ReplyEntry) {
@@ -142,11 +144,13 @@ pub trait Filesystem {
 
     /// Remove a file.
     fn unlink(&mut self, _req: &Request<'_>, _parent: u64, _name: &OsStr, reply: ReplyEmpty) {
+        println!("[I] -- unlink ---");
         reply.error(ENOSYS);
     }
 
     /// Remove a directory.
     fn rmdir(&mut self, _req: &Request<'_>, _parent: u64, _name: &OsStr, reply: ReplyEmpty) {
+        println!("[I] -- rmdir ---");
         reply.error(ENOSYS);
     }
 
@@ -382,6 +386,7 @@ pub trait Filesystem {
     fn getxtimes(&mut self, _req: &Request<'_>, _ino: u64, reply: ReplyXTimes) {
         reply.error(ENOSYS);
     }
+
 }
 
 /// Mount the given filesystem to the given mountpoint. This function will

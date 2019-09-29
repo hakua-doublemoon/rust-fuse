@@ -10,7 +10,10 @@ pub struct BlockInfo {
 }
 
 impl BlockInfo {
-
+    pub fn size(&self) -> usize
+    {
+        self.bbox.size()
+    }
 }
 
 pub fn create(fname: String, ino: u64) -> BlockInfo
