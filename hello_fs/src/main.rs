@@ -10,7 +10,7 @@ use fuse::{ReplyWrite, ReplyOpen, ReplyEmpty, ReplyXattr};
 mod hello_inode;
 use hello_inode::{INVALID_INO, INVALID_BLOCK_ID};
 mod hello_block_info;
-use hello_block_info::{BlockInfo};
+use hello_block_info::{BlockInfo, INVALID_FH};
 mod hello_blocks;
 
 const TTL: Duration = Duration::from_secs(1);           // 1 second
@@ -19,7 +19,6 @@ const HELLO_DATA: [u8; 18] = [
                 0x68, 0x65, 0x6c, 0x6c, 0x6f, 0x20,
                 0x77, 0x6f, 0x72, 0x6c, 0x64, 0x0a];
 const HELLO_DIR_INO: u64 = 1;
-const FILE_HANDLER: u64 = 1;
 
 struct HelloFS {
     // inode相当
@@ -29,8 +28,6 @@ struct HelloFS {
     pub block_infos: Vec::<BlockInfo>,
     // block
     pub fs_size: i32,
-    // fh
-    pub is_file_open: bool,
 }
 
 impl Filesystem for HelloFS {
@@ -104,29 +101,28 @@ impl Filesystem for HelloFS {
         reply.ok();
     }
 
-    fn open(&mut self, _req: &Request<'_>, ino: u64, _flags: u32, reply: ReplyOpen) {
-        println!("[D] -- open [ino: {}] --", ino);
-        if  self.is_file_open  {
-            reply.opened(0, 0);
+    fn open(&mut self, _req: &Request<'_>, ino: u64, flags: u32, reply: ReplyOpen) {
+        println!("[D] -- open [ino: {} / flag: {}] --", ino, flags);
+        let info_idx = hello_inode::info_idx_get(&self.file_inode, ino);
+        let fh = self.block_infos[info_idx].open(flags);
+        if  fh == INVALID_FH  {
+            reply.error(libc::EBUSY);
         } else {
-            self.is_file_open = true;
-            reply.opened(FILE_HANDLER, 0);
+            reply.opened(fh as u64, 0);
         }
     }
 
     // なくても良い
-    fn flush(&mut self, _req: &Request<'_>, ino: u64, fh: u64, _lock_owner: u64, reply: ReplyEmpty) {
+    fn flush(&mut self, _req: &Request<'_>, ino: u64, _fh: u64, _lock_owner: u64, reply: ReplyEmpty) {
         println!("[D] -- flush [ino: {}] ---", ino);
-        debug_assert!(fh == FILE_HANDLER, "unknown fh {} / ino = {}", fh, ino);
-        //self.is_file_open = false;
         reply.ok();
     }
 
     // なくても良い（でもファイルハンドラーの制御をするなら必要）
     fn release(&mut self, _req: &Request<'_>, ino: u64, fh: u64, _flags: u32, _lock_owner: u64, _flush: bool, reply: ReplyEmpty) {
         println!("[D] -- release [ino: {}] --", ino);
-        debug_assert!(fh == FILE_HANDLER, "unknown fh {} / ino = {}", fh, ino);
-        self.is_file_open = false;
+        let info_idx = hello_inode::info_idx_get(&self.file_inode, ino);
+        self.block_infos[info_idx].close(fh);
         reply.ok();
     }
 
@@ -248,14 +244,8 @@ fn main() {
     let mut hello_fs = HelloFS {
         dir_inode:  hello_inode::dir_attr_get(),
         file_inode:   vec![hello_inode::inode_data_create(first_ino, 1, first_info_idx)],
-        block_infos:  vec![BlockInfo {
-                                name: String::from("hello.txt"),
-                                ino:  first_ino,
-                                bbox: hello_blocks::create_raw(1 as usize),
-                            }
-                          ],
+        block_infos:  vec![hello_block_info::create(String::from("hello.txt"), first_ino)],
         fs_size:      0,
-        is_file_open: false,
     };
     hello_fs.fs_size_update(hello_fs.block_infos[first_info_idx].size() as i32);
     let written_size = hello_fs.write_impl(first_info_idx, first_node_idx, 0, &HELLO_DATA);

@@ -9,6 +9,8 @@ class FsTest
     end
 
     def ls_test(test_no, test_results, expect_fnames)
+      puts ""
+      puts "### TEST #{test_no} ###"
       begin
         fns = [""]
         Dir.each_child(@test_dir) do |fname|
@@ -31,6 +33,8 @@ class FsTest
     end
 
     def create_test(test_no, test_results, new_fname)
+      puts ""
+      puts "### TEST #{test_no} ###"
       begin
         fp = File.open(@test_dir+"/"+new_fname, File::CREAT, 0644)
         fp.close
@@ -41,6 +45,8 @@ class FsTest
     end
 
     def read_test(test_no, test_results, trg_fname, expect_str)
+      puts ""
+      puts "### TEST #{test_no} ###"
       begin
         str = ""
         File.open(@test_dir+"/"+trg_fname, File::RDONLY) do |fp|
@@ -57,15 +63,18 @@ class FsTest
         test_results[test_no.to_i] = "#{test_no}: OK"
       rescue =>e
         test_results[test_no.to_i] = "#{test_no}: NG => #{e.message}"
+        raise e
       end
     end
 
     def write_test(test_no, test_results, trg_fname, expect_str, mode)
+      puts ""
+      puts "### TEST #{test_no} ###"
       begin
         File.open(@test_dir+"/"+trg_fname, mode) do |fp|
-        fp.write(expect_str)
-        fp.close()
-      end
+            fp.write(expect_str)
+            fp.close()
+        end
         test_results[test_no.to_i] = "#{test_no}: OK"
       rescue =>e
         test_results[test_no.to_i] = "#{test_no}: NG => #{e.message}"
@@ -73,6 +82,8 @@ class FsTest
     end
 
     def delete_test(test_no, test_results, trg_fname)
+      puts ""
+      puts "### TEST #{test_no} ###"
       begin
         fp = File.delete(@test_dir+"/"+trg_fname)
         test_results[test_no.to_i] = "#{test_no}: OK"
@@ -81,4 +92,21 @@ class FsTest
       end
     end
 
+    def double_open_test(test_no, test_results, trg_fname, mode)
+      puts ""
+      puts "### TEST #{test_no} ###"
+      begin
+        File.open(@test_dir+"/"+trg_fname, mode) do |fp|
+            File.open(@test_dir+"/"+trg_fname, mode) do |fp|
+                fp.close()
+            end
+            fp.close()
+        end
+        test_results[test_no.to_i] = "#{test_no}: NG"
+      rescue =>e
+        test_results[test_no.to_i] = "#{test_no}: OK => #{e.message}"
+      end
+    end
+
 end
+

@@ -10,9 +10,12 @@ export RUST_BACKTRACE=1
 (../target/debug/hello_fs $TEST_DIR >&3) 3> >(./colorize.pl >&1) &
 
 sleep 1
+
 echo "---- TEST START !! ----"
 echo "[FIRST]"
 ruby test01.rb $TEST_DIR
+read -p "Hit enter: "
+
 echo "[SECOND]"
 ruby test02.rb $TEST_DIR
 
